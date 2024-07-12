@@ -49,15 +49,23 @@ class BNRelu(nn.Module):
 class ContrArm(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, input_rows=192, input_cols=192):
         super(ContrArm, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size, padding='same')
+        # Calculate padding for same effect
+        padding1 = tuple((k - 1) // 2 for k in kernel_size)
+        
+        self.conv1 = nn.Conv2d(in_channels, in_channels, kernel_size, padding=padding1)
         self.bn_relu1 = BNRelu(in_channels)
         
-        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
+        padding2 = tuple((k - 1) // 2 for k in kernel_size)
+        self.conv2 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding2)
         self.bn_relu2 = BNRelu(out_channels)
         
-        self.conv3 = nn.Conv2d(in_channels, out_channels // 2, kernel_size[0]-2, kernel_size[1]-2, padding='same')
+        # Adjust kernel size for conv3
+        kernel_size3 = (kernel_size[0]-2, kernel_size[1]-2)
+        padding3 = tuple((k - 1) // 2 for k in kernel_size3)
+        self.conv3 = nn.Conv2d(in_channels, out_channels // 2, kernel_size3, padding=padding3)
         self.bn_relu3 = BNRelu(out_channels // 2)
-        self.kernel_size = kernel_size
+        
+        self.kernel_size = kernel_size 
         
     def forward(self, input_tensor):
         # x = F.pad(input_tensor, same_padding(input_tensor.shape[2], input_tensor.shape[3], input_tensor.shape[2], input_tensor.shape[3],self.kernel_size), 'constant', 0)
@@ -84,16 +92,23 @@ class ContrArm(nn.Module):
 class ImprvContrArm(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size):
         super(ImprvContrArm, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
+    
+        # Calculate padding for same effect for conv1, conv2, and conv3
+        padding = tuple((k - 1) // 2 for k in kernel_size)
+        
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
         self.bn1 = nn.BatchNorm2d(out_channels)
         
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
         self.bn2 = nn.BatchNorm2d(out_channels)
         
-        self.conv3 = nn.Conv2d(out_channels, out_channels , kernel_size, padding='same')
-        self.bn3 = nn.BatchNorm2d(out_channels )
+        self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
+        self.bn3 = nn.BatchNorm2d(out_channels)
         
-        self.conv4 = nn.Conv2d(in_channels, out_channels // 2, kernel_size=(kernel_size[0] - 2, kernel_size[1] - 2), padding='same')
+        # Adjust kernel size for conv4 and calculate padding
+        kernel_size_adj = (kernel_size[0] - 2, kernel_size[1] - 2)
+        padding_adj = tuple((k - 1) // 2 for k in kernel_size_adj)
+        self.conv4 = nn.Conv2d(in_channels, out_channels // 2, kernel_size_adj, padding=padding_adj)
         self.bn4 = nn.BatchNorm2d(out_channels // 2)
         
     def forward(self, x):
@@ -134,15 +149,22 @@ class ImprvContrArm(nn.Module):
 class Bridge(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size):
         super(Bridge, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
+        # Calculate padding for same effect for conv1 and conv2
+        padding = tuple((k - 1) // 2 for k in kernel_size)
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
         self.bn1 = nn.BatchNorm2d(out_channels)
 
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
         self.dropout = nn.Dropout(p=0.15)
         self.bn2 = nn.BatchNorm2d(out_channels)
 
-        self.conv3 = nn.Conv2d(in_channels, out_channels // 2, kernel_size=(kernel_size[0] - 2, kernel_size[1] - 2), padding='same')
+        # Adjust kernel size for conv3 and calculate padding
+        kernel_size_adj = (kernel_size[0] - 2, kernel_size[1] - 2)
+        padding_adj = tuple((k - 1) // 2 for k in kernel_size_adj)
+        self.conv3 = nn.Conv2d(in_channels, out_channels // 2, kernel_size_adj, padding=padding_adj)
         self.bn3 = nn.BatchNorm2d(out_channels // 2)
+
 
     def forward(self, x):
         inp = x
@@ -170,8 +192,13 @@ class Bridge(nn.Module):
 class ConvBlockExpPath(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size):
         super(ConvBlockExpPath, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        # self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
+        # self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        # self.bn_relu = BNRelu(out_channels)
+        padding = tuple((k - 1) // 2 for k in kernel_size)  # Calculate padding for 'same' effect
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
         self.bn_relu = BNRelu(out_channels)
         
     def forward(self, x):
@@ -182,9 +209,16 @@ class ConvBlockExpPath(nn.Module):
 class ConvBlockExpPath3(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size):
         super(ConvBlockExpPath3, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
-        self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        # self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding='same')
+        # self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        # self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size, padding='same')
+        # self.bn_relu = BNRelu(out_channels)
+        # Assuming kernel_size is a tuple (kernel_height, kernel_width)
+        padding = tuple((k - 1) // 2 for k in kernel_size)  # Calculate padding for 'same' effect
+
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
+        self.conv3 = nn.Conv2d(out_channels, out_channels, kernel_size, padding=padding)
         self.bn_relu = BNRelu(out_channels)
         
     def forward(self, x):
