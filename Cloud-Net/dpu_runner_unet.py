@@ -12,14 +12,16 @@ import pandas as pd
 from utils import get_input_image_names
 
 
-GLOBAL_PATH = 'path to 38-cloud dataset'
-TRAIN_FOLDER = os.path.join(GLOBAL_PATH, 'Training')
-TEST_FOLDER = os.path.join(GLOBAL_PATH, 'Test')
-PRED_FOLDER = os.path.join(GLOBAL_PATH, 'Predictions')
-
+GLOBAL_PATH = '~/38-cloud'
+TRAIN_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_training')
+TEST_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_test')
+# PRED_FOLDER = os.path.join(GLOBAL_PATH, 'Predictions')
+PRED_FOLDER = TEST_FOLDER
 
 in_rows = 384
 in_cols = 384
+# in_rows = 192
+# in_cols = 192
 num_of_channels = 4
 num_of_classes = 1
 batch_sz = 10
@@ -28,15 +30,11 @@ experiment_name = "Cloud-Net_trained_on_38-Cloud_training_patches"
 
 
 # getting input images names
-
 test_patches_csv_name = 'test_patches_38-cloud.csv'
+# The main_test script uses the following line to get the test images and their ids
 df_test_img = pd.read_csv(os.path.join(TEST_FOLDER, test_patches_csv_name))
 test_img, test_ids = get_input_image_names(df_test_img, TEST_FOLDER, if_train=False)
 pred_dir = experiment_name + '_train_192_test_384'
-
-
-
-
 
 """
  obtain dpu subgrah
@@ -56,11 +54,6 @@ def get_child_subgraph_dpu(graph: "Graph") -> List["Subgraph"]:
         for cs in child_subgraphs
         if cs.has_attr("device") and cs.get_attr("device").upper() == "DPU"
     ]
-
-    
-
-
-    
 
 def main(argv):
     g = xir.Graph.deserialize(argv[1])
