@@ -42,8 +42,8 @@ def train():
         model.train()
         train_loss = 0
         i = 0
-        # for i in tqdm(range(steps_per_epoch), desc=f"{i}/{steps_per_epoch}"):
-        for i in range(1): #steps_per_epoch):
+        for i in tqdm(range(steps_per_epoch), desc=f"{i}/{steps_per_epoch}"):
+        # for i in range(1): #steps_per_epoch):
             images, masks = next(gen_train)
             images = torch.tensor(images, dtype=torch.float32).to(device)
             masks = torch.tensor(masks, dtype=torch.float32).to(device)
@@ -64,8 +64,8 @@ def train():
         model.eval()
         val_loss = 0
         with torch.no_grad():
-            # for _ in range(validation_steps):
-            for _ in range(1):
+            for _ in range(validation_steps):
+            # for _ in range(1):
                 images_val, masks_val = next(gen_valid)
                 images_val = torch.tensor(images_val, dtype=torch.float32).to(device)
                 masks_val = torch.tensor(masks_val, dtype=torch.float32).to(device)
@@ -109,7 +109,7 @@ patience = 15
 decay_factor = 0.7
 batch_sz = 16  # was 12
 max_bit = 65535  # maximum gray level in landsat 8 images
-experiment_name = "Cloud-Net-pt-same-padding"
+experiment_name = "Cloud-Net"
 weights_path = os.path.join(GLOBAL_PATH, experiment_name + '.pt')
 train_resume = False
 
