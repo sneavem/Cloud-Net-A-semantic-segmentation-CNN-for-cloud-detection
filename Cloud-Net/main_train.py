@@ -15,7 +15,6 @@ from generators import mybatch_generator_train, mybatch_generator_validation
 import pandas as pd
 from utils import get_input_image_names
 from cloudnet import CloudNetPlus
-from jaccard_loss import FilteredJaccardLoss
 from unet_model import UNet
 
 
@@ -37,6 +36,7 @@ def train():
     validation_steps = int(np.ceil(len(val_img_split) / batch_sz))
 
     best_loss = float('inf')
+
     
     for epoch in range(max_num_epochs):
         model.train()
@@ -54,9 +54,11 @@ def train():
             outputs = model(images)
         
             loss = jacc_coef(masks, outputs)
+            print(f'loss_: {loss}')
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
+            print(f'train_loss: {train_loss}')
 
         train_loss /= steps_per_epoch
 

@@ -503,6 +503,7 @@ class ModelArch(nn.Module):
         # print(f'Final output: {x13.shape}')
 
         # Upsample the tensor to (12, 1, 192, 192)
+        x13 = torch.sigmoid(x13)
         return x13
 
 
