@@ -9,37 +9,83 @@ import vart
 from generators import mybatch_generator_prediction
 import tifffile as tiff
 import pandas as pd
-from utils import get_input_image_names
+from tqdm import tqdm
+from sklearn.model_selection import train_test_split
+# from utils import get_input_image_names
 
 
-GLOBAL_PATH = '~/38-cloud'
+GLOBAL_PATH = '/home/root/38-cloud'
 TRAIN_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_training')
-TEST_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_test')
+# TEST_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_test')
 # PRED_FOLDER = os.path.join(GLOBAL_PATH, 'Predictions')
-PRED_FOLDER = TEST_FOLDER
+PRED_FOLDER = TRAIN_FOLDER # TODO: CHange this to the same folder as the TEST_FOLDER
 
-in_rows = 384
-in_cols = 384
+in_rows = 192
+in_cols = 192
 # in_rows = 192
 # in_cols = 192
 num_of_channels = 4
 num_of_classes = 1
-batch_sz = 10
+batch_sz = 3
 max_bit = 65535  # maximum gray level in landsat 8 images
 experiment_name = "Cloud-Net_trained_on_38-Cloud_training_patches"
 
 
 # getting input images names
-test_patches_csv_name = 'test_patches_38-cloud.csv'
+# test_patches_csv_name = 'test_patches_38-cloud.csv'
+train_patches_csv_name = 'training_patches_38-Cloud.csv'
+
+def get_input_image_names(list_names, directory_name, if_train=True):
+    list_img = []
+    list_msk = []
+    list_test_ids = []
+
+    for filenames in tqdm(list_names['name'], miniters=1000):
+        nred = 'red_' + filenames
+        nblue = 'blue_' + filenames
+        ngreen = 'green_' + filenames
+        nnir = 'nir_' + filenames
+
+        if if_train:
+            dir_type_name = "train"
+            fl_img = []
+            nmask = 'gt_' + filenames
+            fl_msk = os.path.join(directory_name, 'train_gt', f'{nmask}.TIF')
+            list_msk.append(fl_msk)
+        else:
+            dir_type_name = "test"
+            fl_img = []
+            fl_id = f'{filenames}.TIF'
+            list_test_ids.append(fl_id)
+
+        fl_img_red = os.path.join(directory_name, f'{dir_type_name}_red', f'{nred}.TIF')
+        fl_img_green = os.path.join(directory_name, f'{dir_type_name}_green', f'{ngreen}.TIF')
+        fl_img_blue = os.path.join(directory_name, f'{dir_type_name}_blue', f'{nblue}.TIF')
+        fl_img_nir = os.path.join(directory_name, f'{dir_type_name}_nir', f'{nnir}.TIF')
+
+        fl_img.extend([fl_img_red, fl_img_green, fl_img_blue, fl_img_nir])
+        list_img.append(fl_img)
+
+    if if_train:
+        return list_img, list_msk
+    else:
+        return list_img, list_test_ids
+
 # The main_test script uses the following line to get the test images and their ids
-df_test_img = pd.read_csv(os.path.join(TEST_FOLDER, test_patches_csv_name))
-test_img, test_ids = get_input_image_names(df_test_img, TEST_FOLDER, if_train=False)
+#TODO: change back to test_patches_csv_name for test images
+# TODO also change back to TEST_FOLDER 
+df_test_img = pd.read_csv(os.path.join(TRAIN_FOLDER, train_patches_csv_name))
+# Switched if_train to True
+test_img, test_ids = get_input_image_names(df_test_img, TRAIN_FOLDER, if_train=True)
+
 pred_dir = experiment_name + '_train_192_test_384'
+imgs_mask_test = mybatch_generator_prediction(test_img, in_rows, in_cols, batch_sz, max_bit)
+imgs_mask_test = list(next(imgs_mask_test))
 
 """
  obtain dpu subgrah
 """
-def get_child_subgraph_dpu(graph: "Graph") -> List["Subgraph"]:
+def get_child_subgraph_dpu(graph):
     assert graph is not None, "'graph' should not be None."
     root_subgraph = graph.get_root_subgraph()
     assert (
@@ -56,37 +102,66 @@ def get_child_subgraph_dpu(graph: "Graph") -> List["Subgraph"]:
     ]
 
 def main(argv):
+    # Getting test image
+    test_img = imgs_mask_test[2]
+
     g = xir.Graph.deserialize(argv[1])
     subgraphs = get_child_subgraph_dpu(g)
-    assert len(subgraphs) == 1  # only one DPU kernel
+    # I'm not sure if this assert condition is essential 
+    # assert len(subgraphs) == 1  # only one DPU kernel
     runner = vart.RunnerExt.create_runner (subgraphs[0], "run")
     input_tensor_buffers = runner.get_inputs()
     output_tensor_buffers = runner.get_outputs()
 
     input_ndim = tuple(input_tensor_buffers[0].get_tensor().dims)
+    print(f'output_shape: {output_tensor_buffers[0].get_tensor().dims}')
+    print(f'input_ndims: {input_ndim}')
     batch = input_ndim[0]
     print(f'batch_sz: {batch}')
     width = input_ndim[1]
+    print(f'width: {width}')
     height = input_ndim[2]
+    print(f'height: {height}')
     fixpos = input_tensor_buffers[0].get_tensor().get_attr("fix_point")
 
     # image = preprocess_one_image(argv[2], width, height, MEANS, SCALES, fixpos)
     input_data = np.asarray(input_tensor_buffers[0])
-    input_data[0] = test_img[0]
+    print(f'input_data: {input_data}')
+    print(f'test_img: {test_img}')
+    print(f'test_img shape: {test_img.shape}')
+    input_data[0] = test_img
+    print(f'input_data[0]: {input_data[0]}')
+    print(f'all zeros input_data: {np.all(input_data[0] == 0)}')
 
     job_id = runner.execute_async(input_tensor_buffers, output_tensor_buffers)
     runner.wait(job_id)
 
     pre_output_size = int(output_tensor_buffers[0].get_tensor().get_data_size() / batch)
+    print(f'pre_output_size: {pre_output_size}')
+    print(f'output_tensor buffers: {output_tensor_buffers}')
     output_data = np.asarray(output_tensor_buffers[0])
-    output_data = (output_data[:, :, 0]).astype(np.int32)
-    tiff.imsave(os.path.join(PRED_FOLDER, pred_dir, str(test_ids[0])), output_data)
+    print(f'first_output: {output_data.shape}')
+    output_data = (output_data[:1, :, :, 0]).astype(np.int32)
+    output_data = np.squeeze(output_data, axis=0)
+    print(f'output_data: {output_data}')
+    print(f'output_data shape: {output_data.shape}')
+    print(f'all zeros: {np.all(output_data == 0)}')
+    # Testing with only one image and label  firsnt
+
+    pred_dir_path = os.path.join(PRED_FOLDER, pred_dir)
+    os.makedirs(pred_dir_path, exist_ok=True)
+    filename = os.path.basename(str(test_ids[2]))
+    
+    tiff.imsave(os.path.join(PRED_FOLDER, pred_dir, filename), output_data)
+    print(f'saving at {os.path.join(PRED_FOLDER, pred_dir, filename)}')
+    # print(f'test_ids: {test_ids[0]}')
     del runner
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) != 3:
+    #if len(sys.argv) != 3:
+    if len(sys.argv) != 2:
         print("please  model file and input file.")
     else:
         main(sys.argv)

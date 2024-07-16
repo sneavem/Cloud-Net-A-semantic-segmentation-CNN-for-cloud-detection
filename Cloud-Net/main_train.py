@@ -20,7 +20,7 @@ from unet_model import UNet
 
 # Training function
 def train():
-    model = ModelArch()
+    model = UNet(n_channels=4, n_classes=1)
     model = model.to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=starting_learning_rate)
@@ -52,13 +52,12 @@ def train():
 
             optimizer.zero_grad()
             outputs = model(images)
+            print(f'outputs shape: {outputs.shape}')
         
             loss = jacc_coef(masks, outputs)
-            print(f'loss_: {loss}')
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            print(f'train_loss: {train_loss}')
 
         train_loss /= steps_per_epoch
 
