@@ -100,8 +100,6 @@ class Up(nn.Module):
         x1 = x1
         x2 = x2
         x1 = self.up(x1)
-
-        # Don't need padding since input height and width dims are square
         # input is CHW
         # diffY = (x2.size()[2] - x1.size()[2])
         # diffX = (x2.size()[3] - x1.size()[3])

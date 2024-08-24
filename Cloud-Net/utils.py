@@ -59,7 +59,7 @@ def get_input_image_names(list_names, directory_name, if_train=True):
         nred = 'red_' + filenames
         nblue = 'blue_' + filenames
         ngreen = 'green_' + filenames
-        nnir = 'nir_' + filenames
+        nlwir = 'lwir_' + filenames
 
         if if_train:
             dir_type_name = "train"
@@ -76,9 +76,9 @@ def get_input_image_names(list_names, directory_name, if_train=True):
         fl_img_red = os.path.join(directory_name, f'{dir_type_name}_red', f'{nred}.TIF')
         fl_img_green = os.path.join(directory_name, f'{dir_type_name}_green', f'{ngreen}.TIF')
         fl_img_blue = os.path.join(directory_name, f'{dir_type_name}_blue', f'{nblue}.TIF')
-        fl_img_nir = os.path.join(directory_name, f'{dir_type_name}_nir', f'{nnir}.TIF')
+        fl_img_lwir = os.path.join(directory_name, f'{dir_type_name}_lwir', f'{nlwir}.TIF')
 
-        fl_img.extend([fl_img_red, fl_img_green, fl_img_blue, fl_img_nir])
+        fl_img.extend([fl_img_red, fl_img_green, fl_img_blue, fl_img_lwir])
         list_img.append(fl_img)
 
     if if_train:

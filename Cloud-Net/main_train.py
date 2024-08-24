@@ -37,6 +37,7 @@ def train():
 
     best_loss = float('inf')
 
+    print(f'Steps per epoch : {steps_per_epoch}')
     
     for epoch in range(max_num_epochs):
         model.train()
@@ -44,6 +45,7 @@ def train():
         i = 0
         for i in tqdm(range(steps_per_epoch), desc=f"{i}/{steps_per_epoch}"):
         # for i in range(1): #steps_per_epoch):
+            print(f'On iteration {i}')
             images, masks = next(gen_train)
             images = torch.tensor(images, dtype=torch.float32).to(device)
             masks = torch.tensor(masks, dtype=torch.float32).to(device)
@@ -52,7 +54,6 @@ def train():
 
             optimizer.zero_grad()
             outputs = model(images)
-            print(f'outputs shape: {outputs.shape}')
         
             loss = jacc_coef(masks, outputs)
             loss.backward()
@@ -110,7 +111,7 @@ patience = 15
 decay_factor = 0.7
 batch_sz = 16  # was 12
 max_bit = 65535  # maximum gray level in landsat 8 images
-experiment_name = "Cloud-Net"
+experiment_name = "Cloud-Net-with-gsd-aug"
 weights_path = os.path.join(GLOBAL_PATH, experiment_name + '.pt')
 train_resume = False
 

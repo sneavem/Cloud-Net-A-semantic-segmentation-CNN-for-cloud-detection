@@ -22,8 +22,6 @@ PRED_FOLDER = TRAIN_FOLDER # TODO: CHange this to the same folder as the TEST_FO
 
 in_rows = 192
 in_cols = 192
-# in_rows = 192
-# in_cols = 192
 num_of_channels = 4
 num_of_classes = 1
 batch_sz = 3
@@ -116,57 +114,32 @@ def main(argv):
 
     g = xir.Graph.deserialize(argv[1])
     subgraphs = get_child_subgraph_dpu(g)
-    # I'm not sure if this assert condition is essential 
     # assert len(subgraphs) == 1  # only one DPU kernel
     runner = vart.RunnerExt.create_runner (subgraphs[0], "run")
     input_tensor_buffers = runner.get_inputs()
     output_tensor_buffers = runner.get_outputs()
 
     input_ndim = tuple(input_tensor_buffers[0].get_tensor().dims)
-    print(f'output_shape: {output_tensor_buffers[0].get_tensor().dims}')
-    print(f'input_ndims: {input_ndim}')
     batch = input_ndim[0]
-    print(f'batch_sz: {batch}')
     width = input_ndim[1]
-    print(f'width: {width}')
     height = input_ndim[2]
-    print(f'height: {height}')
     fixpos = input_tensor_buffers[0].get_tensor().get_attr("fix_point")
     output_fixpos = output_tensor_buffers[0].get_tensor().get_attr("fix_point")
-    print(f'fixpos: {fixpos}')
-    print(f' output_fixpos: {output_fixpos}')
 
     # image = preprocess_one_image(argv[2], width, height, MEANS, SCALES, fixpos)
     # input_data = np.asarray(input_tensor_buffers[0])
-    # print(f'input_data shape: {input_data.shape}')
-    # print(f'test_img shape: {test_img.shape}')
-    # print(f'test_img: {test_img}')
-    print(f'test_img shape: {test_img.shape}')
     input_data = (np.copy(test_img) * 2**fixpos).astype(np.int8)
-    print(f'input_data[0]: {input_data[0]}')
-    print(f'test_img: {test_img}')
-    print(f'all zeros test_img: {np.all(test_img == 0)}')
-    print(f'all zeros input_data[0]: {np.all(input_data[0] == 0)}')
-    print(f'input_tensor_buffers: {np.asarray(input_tensor_buffers[0])}')
 
     job_id = runner.execute_async([input_data], output_tensor_buffers)
     runner.wait(job_id)
 
     pre_output_size = int(output_tensor_buffers[0].get_tensor().get_data_size() / batch)
     
-    print(f'pre_output_size: {pre_output_size}')
-    print(f'output_tensor buffers: {output_tensor_buffers}')
     output_data = np.asarray(output_tensor_buffers[0])
-    print(f'output_data raw: {output_data}')
     output_data = output_data.astype(np.float32) * 2**(-output_fixpos)
-    print(f'output_data after fix_float: {output_data}')
     output_data = Sigmoid(output_data)
-    print(f'output_data after sigmoid: {output_data}')
-    print(f'first_output: {output_data.shape}')
     output_data = (output_data[0, :, :, 0]).astype(np.float32)
     # output_data = np.squeeze(output_data, axis=0)
-    print(f'output_data shape: {output_data.shape}')
-    print(f'all zeros: {np.all(output_data == 0)}')
     print(f'output_data: {output_data}')
     # Testing with only one image and label  firsnt
 
@@ -176,7 +149,6 @@ def main(argv):
     
     tiff.imsave(os.path.join(PRED_FOLDER, pred_dir, filename), output_data)
     print(f'saving at {os.path.join(PRED_FOLDER, pred_dir, filename)}')
-    # print(f'test_ids: {test_ids[0]}')
     del runner
 
 

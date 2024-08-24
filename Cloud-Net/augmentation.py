@@ -25,45 +25,61 @@ def flipping_img_and_msk(img, msk):
     return img_o, msk_o
 
 def zoom_img_and_msk(img, msk):
-
-    zoom_factor = np.random.choice((1.2, 1.5, 1.8, 2, 2.2, 2.5))  # currently doesn't have zoom out!
+    zoom_factor = np.random.choice((0.5, 0.7, 0.8, 0.9, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.5))
     h, w = img.shape[:2]
+    channels_img = img.shape[2] if img.ndim == 3 else 1
+    channels_msk = msk.shape[2] if msk.ndim == 3 else 1
 
-    # width and height of the zoomed image
+    # Width and height of the zoomed image
     zh = int(np.round(zoom_factor * h))
     zw = int(np.round(zoom_factor * w))
 
+    # Resize the image and mask to the new dimensions
     img = trans.resize(img, (zh, zw), preserve_range=True, mode='symmetric')
     msk = trans.resize(msk, (zh, zw), preserve_range=True, mode='symmetric')
+
     region = np.random.choice((0, 1, 2, 3, 4))
 
-    # zooming out
-    if zoom_factor <= 1:
-        outimg = img
-        outmsk = msk
+    if zoom_factor < 1.0:  # Zooming out
+        pad_h = (h - zh) // 2
+        pad_w = (w - zw) // 2
 
-    # zooming in
-    else:
-        # bounding box of the clipped region within the input array
+        # Create padded arrays
+        padded_img = np.zeros((h, w, channels_img), dtype=img.dtype)
+        padded_msk = np.zeros((h, w), dtype=msk.dtype)  # Single-channel mask
+
+        # Place the resized image and mask into the center of the padded arrays
+        padded_img[pad_h:pad_h+zh, pad_w:pad_w+zw, :] = img
+        padded_msk[pad_h:pad_h+zh, pad_w:pad_w+zw] = msk
+
+        # Optionally, you can randomize the position of the zoomed-out image within the padded area
+        start_y = np.random.randint(0, max(1, h - zh + 1))
+        start_x = np.random.randint(0, max(1, w - zw + 1))
+
+        outimg = padded_img[start_y:start_y + h, start_x:start_x + w, :]
+        outmsk = padded_msk[start_y:start_y + h, start_x:start_x + w]
+
+    else:  # Zooming in
         if region == 0:
-            outimg = img[0:h, 0:w]
-            outmsk = msk[0:h, 0:w]
-        if region == 1:
-            outimg = img[0:h, zw - w:zw]
-            outmsk = msk[0:h, zw - w:zw]
-        if region == 2:
-            outimg = img[zh - h:zh, 0:w]
-            outmsk = msk[zh - h:zh, 0:w]
-        if region == 3:
-            outimg = img[zh - h:zh, zw - w:zw]
-            outmsk = msk[zh - h:zh, zw - w:zw]
-        if region == 4:
+            outimg = img[0:h, 0:w, :]
+            outmsk = msk[0:h, 0:w]  # Single-channel mask
+        elif region == 1:
+            outimg = img[0:h, zw-w:zw, :]
+            outmsk = msk[0:h, zw-w:zw]
+        elif region == 2:
+            outimg = img[zh-h:zh, 0:w, :]
+            outmsk = msk[zh-h:zh, 0:w]
+        elif region == 3:
+            outimg = img[zh-h:zh, zw-w:zw, :]
+            outmsk = msk[zh-h:zh, zw-w:zw]
+        elif region == 4:
             marh = h // 2
             marw = w // 2
-            outimg = img[(zh // 2 - marh):(zh // 2 + marh), (zw // 2 - marw):(zw // 2 + marw)]
-            outmsk = msk[(zh // 2 - marh):(zh // 2 + marh), (zw // 2 - marw):(zw // 2 + marw)]
+            outimg = img[(zh//2-marh):(zh//2+marh), (zw//2-marw):(zw//2+marw), :]
+            outmsk = msk[(zh//2-marh):(zh//2+marh), (zw//2-marw):(zw//2+marw)]
 
-    # to make sure the output is in the same size of the input
+    # Ensure the output is the same size as the input
     img_o = trans.resize(outimg, (h, w), preserve_range=True, mode='symmetric')
     msk_o = trans.resize(outmsk, (h, w), preserve_range=True, mode='symmetric')
     return img_o, msk_o
+
