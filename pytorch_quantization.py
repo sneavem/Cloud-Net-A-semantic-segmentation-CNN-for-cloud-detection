@@ -8,7 +8,6 @@ import pandas as pd
 from utils_pt import get_input_image_names, ADAMLearningRateTracker
 from pytorch_nndct.apis import torch_quantizer, dump_xmodel# , evaluate
 import torch
-from cloud_net_model import ModelArch
 from torch.utils.data import Dataset, DataLoader
 import torch.nn as nn
 import torch.optim as optim
