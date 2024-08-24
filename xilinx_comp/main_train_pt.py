@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import pandas as pd
@@ -10,16 +9,15 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import torch.nn.functional as F
 from utils_pt import ADAMLearningRateTracker
-from cloud_net_model import ModelArch
 from loss_pt import jacc_coef
 from generators_pt import mybatch_generator_train, mybatch_generator_validation
 import pandas as pd
 from utils_pt import get_input_image_names
+from 'Cloud-Net-A-semantic-segmentation-CNN-for-cloud-detection'.U-Net.unet_model import UNet
 
 
-# Training function
 def train():
-    model = ModelArch()
+    model = UNet(n_channels=4, n_classes=1)
     model = model.to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=starting_learning_rate)
@@ -35,31 +33,24 @@ def train():
     validation_steps = int(np.ceil(len(val_img_split) / batch_sz))
 
     best_loss = float('inf')
+
+    print(f'Steps per epoch : {steps_per_epoch}')
     
     for epoch in range(max_num_epochs):
         model.train()
         train_loss = 0
-        # for i in range(steps_per_epoch - 1):
-        for i in range(3):
-            print(f'on step {i} on epoch out of {steps_per_epoch}')
+        i = 0
+        # for i in tqdm(range(steps_per_epoch), desc=f"{i}/{steps_per_epoch}"):
+        for i in range(10): #steps_per_epoch):
+            print(f'On iteration {i}')
             images, masks = next(gen_train)
             images = torch.tensor(images, dtype=torch.float32).to(device)
-            # Getting information
-            # print("Shape:", images.shape)
-            # print("Data Type:", images.dtype)
-            # print("Number of Dimensions:", images.ndim)
             masks = torch.tensor(masks, dtype=torch.float32).to(device)
             images = images.permute(0, 3, 1, 2)  # permute to [12, 4, 192, 192]
             masks = masks.permute(0, 3, 1, 2)  # permute to [12, 4, 192, 192]
 
             optimizer.zero_grad()
             outputs = model(images)
-            # print("outputs Shape:", outputs.shape)
-            # print("Data Type:", outputs.dtype)
-            # print("Number of Dimensions:", outputs.ndim)
-            # print("masks Shape:", masks.shape)
-            # print("Data Type:", masks.dtype)
-            # print("Number of Dimensions:", masks.ndim)
         
             loss = jacc_coef(masks, outputs)
             loss.backward()
@@ -68,16 +59,17 @@ def train():
 
         train_loss /= steps_per_epoch
 
-        print("past train")
+        # print("eval")
         model.eval()
         val_loss = 0
         with torch.no_grad():
+            # for _ in range(validation_steps):
             for _ in range(10):
                 images_val, masks_val = next(gen_valid)
                 images_val = torch.tensor(images_val, dtype=torch.float32).to(device)
                 masks_val = torch.tensor(masks_val, dtype=torch.float32).to(device)
-                images_val = images.permute(0, 1, 2, 3)  # permute to [12, 4, 192, 192]
-                masks_val = masks.permute(0, 1, 2, 3)  # permute to [12, 4, 192, 192]
+                images_val = images_val.permute(0, 3, 1, 2)  # permute to [12, 4, 192, 192]
+                masks_val = masks_val.permute(0, 3, 1, 2)  # permute to [12, 4, 192, 192]
 
                 outputs_val = model(images_val)
                 loss_val = jacc_coef(masks_val, outputs_val)
@@ -104,7 +96,7 @@ GLOBAL_PATH = '/nobackup/users/samue100/'
 TRAIN_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_training')
 TEST_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_test')
 
-in_rows = 752 # The largest dimension of the Boson or Bluefox cameras
+in_rows = 752
 in_cols = 752
 num_of_channels = 4
 num_of_classes = 1
