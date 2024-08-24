@@ -2,27 +2,10 @@
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/cloud-net-an-end-to-end-cloud-detection-1/semantic-segmentation-on-38-cloud)](https://paperswithcode.com/sota/semantic-segmentation-on-38-cloud?p=cloud-net-an-end-to-end-cloud-detection-1)
 
-Cloud-Net is an end-to-end cloud detection algorithm for Landsat 8 imagery. However, it can be used for other semantic segmentation applications, too. It gets a four-channel RGBNir image of Landsat 8 and predicts the location of clouds. 
-
-Cloud-Net has been introduced in the following IGARSS paper:
-
-S. Mohajerani and P. Saeedi. "Cloud-Net: An End-to-end Cloud Detection Algorithm for Landsat 8 Imagery". (forthcoming) 2019, to appear at IEEE International Geoscience and Remote Sensing Symposium (IGARSS).
-URL: https://arxiv.org/pdf/1901.10077.pdf
-
-Cloud-Net is a modification of CPAdv-Net, which is proposed in the following paper:
-
-S. Mohajerani and P. Saeedi, "Shadow Detection in Single RGB Images Using a Context Preserver Convolutional Neural Network Trained by Multiple Adversarial Examples," in IEEE Transactions on Image Processing, vol. 28, no. 8, pp. 4117-4129, Aug. 2019.
-doi: 10.1109/TIP.2019.2904267, URL: https://ieeexplore.ieee.org/document/8664462
-
 ## Training Cloud-Net on [38-Cloud Training Set](https://github.com/SorourMo/38-Cloud-A-Cloud-Segmentation-Dataset)
 
 ### Requirements
-The network has been tested with the following setup:<br/>
-Windows 10, CentOS Linux release 7.5.1804<br/>
-Python 3.6<br/>
-Tensorflow 1.9.0, 1.10.0, 1.12.0<br/>
-Keras 2.2.4<br/>
-Scikit-image 0.15.0
+Run `python3 
 
 ### Scripts
 Run ```python main_train.py``` to train the network on 38-Cloud training set. The path to the dataset folder should be set at ```GLOBAL_PATH = 'path to 38-cloud dataset'```. The directory tree for the dataset looks like as following:

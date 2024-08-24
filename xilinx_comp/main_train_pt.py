@@ -104,8 +104,8 @@ GLOBAL_PATH = '/nobackup/users/samue100/'
 TRAIN_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_training')
 TEST_FOLDER = os.path.join(GLOBAL_PATH, '38-Cloud_test')
 
-in_rows = 192
-in_cols = 192
+in_rows = 752 # The largest dimension of the Boson or Bluefox cameras
+in_cols = 752
 num_of_channels = 4
 num_of_classes = 1
 starting_learning_rate = 1e-4

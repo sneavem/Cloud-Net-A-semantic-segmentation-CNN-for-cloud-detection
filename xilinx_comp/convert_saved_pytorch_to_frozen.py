@@ -18,8 +18,8 @@ from unet_model import UNet
 
 
 # Define your parameters (replace these with actual values)
-in_rows = 192
-in_cols = 192
+in_rows = 752
+in_cols = 752
 num_of_channels = 4
 num_of_classes = 1
 starting_learning_rate = 1e-4
