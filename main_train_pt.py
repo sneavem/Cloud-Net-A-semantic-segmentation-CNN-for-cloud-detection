@@ -13,7 +13,7 @@ from loss_pt import jacc_coef
 from generators_pt import mybatch_generator_train, mybatch_generator_validation
 import pandas as pd
 from utils_pt import get_input_image_names
-from 'Cloud-Net-A-semantic-segmentation-CNN-for-cloud-detection'.U-Net.unet_model import UNet
+from unet_model import UNet
 
 
 def train():
