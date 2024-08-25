@@ -8,11 +8,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 import torch.nn.functional as F
-from utils_pt import ADAMLearningRateTracker
-from loss_pt import jacc_coef
-from generators_pt import mybatch_generator_train, mybatch_generator_validation
+from utils import ADAMLearningRateTracker, get_input_image_names
+from losses import jacc_coef
+from generators import mybatch_generator_train, mybatch_generator_validation
 import pandas as pd
-from utils_pt import get_input_image_names
 from unet_model import UNet
 
 

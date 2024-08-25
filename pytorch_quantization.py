@@ -2,10 +2,10 @@ import os
 import numpy as np
 import itertools
 from sklearn.model_selection import train_test_split
-from generators_pt import mybatch_generator_train, mybatch_generator_validation
+from generators import mybatch_generator_train, mybatch_generator_validation
 from losses import jacc_coef
 import pandas as pd
-from utils_pt import get_input_image_names, ADAMLearningRateTracker
+from utils import get_input_image_names, ADAMLearningRateTracker
 from pytorch_nndct.apis import torch_quantizer, dump_xmodel# , evaluate
 import torch
 from torch.utils.data import Dataset, DataLoader
